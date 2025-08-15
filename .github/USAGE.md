@@ -1,6 +1,6 @@
 # libXray Android 使用指南
 
-## 📥 获取AAR文件
+## 获取AAR文件
 
 ### 方式1: 从GitHub Releases下载
 1. 访问 [Releases页面](../../releases)
@@ -15,7 +15,7 @@ LATEST_RELEASE=$(curl -s https://api.github.com/repos/YOUR_USERNAME/libXray/rele
 wget $LATEST_RELEASE
 ```
 
-## 🔧 集成到Android项目
+## 集成到Android项目
 
 ### 1. 添加AAR文件
 ```bash
@@ -46,7 +46,7 @@ dependencies {
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 ```
 
-## 🚀 使用示例
+## 使用示例
 
 ### TCP测速 (新功能)
 
@@ -135,14 +135,14 @@ public void testHTTPPing() {
 }
 ```
 
-## 📊 测速对比
+## 测速对比
 
 | 测试类型 | 方法 | 适用场景 | 优势 |
 |---------|------|---------|------|
 | **TCP测速** | `LibXray.pingTCP()` | 纯网络连接测试 | 更快、更纯粹的网络性能 |
 | **HTTP测速** | `LibXray.ping()` | Web访问体验测试 | 更接近真实使用场景 |
 
-## 🔍 常用测试目标
+## 常用测试目标
 
 ```java
 // DNS服务器测试
@@ -157,7 +157,7 @@ testTCP("google.com", 443);     // HTTPS
 testTCP("your-server.com", 8080);
 ```
 
-## 🛠️ 故障排除
+## 故障排除
 
 ### 1. AAR导入失败
 - 确保AAR文件放在正确的 `app/libs/` 目录
@@ -174,7 +174,7 @@ testTCP("your-server.com", 8080);
 - 验证目标主机和端口是否可达
 - 确认代理服务器是否正常运行
 
-## 📚 更多资源
+## 更多资源
 
 - [libXray GitHub仓库](https://github.com/XTLS/libXray)
 - [Xray-core文档](https://xtls.github.io/)
