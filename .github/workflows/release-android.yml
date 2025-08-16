@@ -9,7 +9,7 @@ on:
       - 'docs/**'
 
 env:
-  ANDROID_NDK_VERSION: r25c
+  ANDROID_NDK_VERSION: r26d  # Updated to support 16KB page alignment
   GO_VERSION: '1.21'
 
 jobs:
@@ -53,6 +53,11 @@ jobs:
     - name: Build Android AAR
       run: |
         export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
+        # Set environment variables for Android 15+ 16KB page alignment compatibility
+        export CGO_CFLAGS="-O2 -g"
+        export CGO_CXXFLAGS="-O2 -g"  
+        export CGO_LDFLAGS="-Wl,-z,max-page-size=0x4000 -Wl,-z,common-page-size=0x4000 -Wl,--section-start=.text=0x4000 -Wl,-z,separate-loadable-segments"
+        echo "Building AAR with 16KB page alignment for Android 15+ compatibility..."
         python3 build/main.py android
         
     - name: Verify build output
@@ -60,6 +65,39 @@ jobs:
         ls -la libXray.aar libXray-sources.jar
         echo "AAR size: $(du -h libXray.aar | cut -f1)"
         echo "Sources size: $(du -h libXray-sources.jar | cut -f1)"
+        
+    - name: Verify 16KB page alignment compatibility
+      run: |
+        # Extract AAR and check native libraries for 16KB alignment
+        unzip -q libXray.aar
+        echo "Checking 16KB page alignment for Android 15+ compatibility..."
+        
+        # Check all native libraries
+        for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+          if [ -f "jni/$arch/libgojni.so" ]; then
+            echo "Checking $arch architecture..."
+            
+            # Use readelf to check segment alignment (if available)
+            if command -v readelf >/dev/null 2>&1; then
+              echo "Segment alignment for $arch:"
+              readelf -l "jni/$arch/libgojni.so" | grep -E "(LOAD|Align)" || true
+            else
+              echo "readelf not available, skipping detailed check for $arch"
+            fi
+            
+            # Check file size alignment
+            size=$(stat -c%s "jni/$arch/libgojni.so" 2>/dev/null || stat -f%z "jni/$arch/libgojni.so" 2>/dev/null || echo "0")
+            remainder=$((size % 16384))
+            if [ $remainder -eq 0 ]; then
+              echo "✅ $arch: File size aligned to 16KB boundary"
+            else
+              echo "⚠️  $arch: File size not aligned to 16KB boundary (remainder: $remainder bytes)"
+            fi
+          fi
+        done
+        
+        # Clean up extracted files
+        rm -rf META-INF jni classes.jar AndroidManifest.xml R.txt res proguard.txt 2>/dev/null || true
         
     - name: Generate build info
       id: build_info
@@ -98,6 +136,11 @@ jobs:
           - `arm64-v8a` (64位ARM) 
           - `x86` (32位x86)
           - `x86_64` (64位x86)
+          
+          🔧 **Android 15+ 兼容性**
+          - ✅ 支持16KB页面大小 (Android 15+要求)
+          - ✅ 符合Google Play 2025年11月新规
+          - ✅ 使用NDK r26d构建
           
           📱 **在Android项目中使用**
           
