@@ -90,6 +90,13 @@ type pingTCPRequest struct {
 	Proxy      string `json:"proxy,omitempty"`
 }
 
+type connectRequest struct {
+	DatDir     string `json:"datDir,omitempty"`
+	ConfigPath string `json:"configPath,omitempty"`
+	Timeout    int    `json:"timeout,omitempty"`
+	ProxyAddr  string `json:"proxyAddr,omitempty"`
+}
+
 // Ping Xray config and get the delay of its outbound.
 func Ping(base64Text string) string {
 	var response nodep.CallResponse[int64]
@@ -119,6 +126,22 @@ func PingTCP(base64Text string) string {
 		return response.EncodeToBase64(nodep.PingDelayError, err)
 	}
 	delay, err := xray.PingTCP(request.DatDir, request.ConfigPath, request.Timeout, request.Host, request.Port, request.Proxy)
+	return response.EncodeToBase64(delay, err)
+}
+
+// Connect Xray proxy server and get the connection delay.
+func Connect(base64Text string) string {
+	var response nodep.CallResponse[int64]
+	req, err := base64.StdEncoding.DecodeString(base64Text)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	var request connectRequest
+	err = json.Unmarshal(req, &request)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	delay, err := xray.Connect(request.DatDir, request.ConfigPath, request.Timeout, request.ProxyAddr)
 	return response.EncodeToBase64(delay, err)
 }
 

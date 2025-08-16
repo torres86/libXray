@@ -68,6 +68,12 @@ func CGoPingTCP(base64Text *C.char) *C.char {
 	return C.CString(PingTCP(text))
 }
 
+//export CGoConnect
+func CGoConnect(base64Text *C.char) *C.char {
+	text := C.GoString(base64Text)
+	return C.CString(Connect(text))
+}
+
 //export CGoQueryStats
 func CGoQueryStats(base64Text *C.char) *C.char {
 	text := C.GoString(base64Text)

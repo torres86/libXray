@@ -112,6 +112,40 @@ func MeasureTCPDelay(timeout int, host string, port int, proxy string) (int64, e
 	return delay, nil
 }
 
+// MeasureConnectDelay 测试代理连接延迟，类似Shadowrocket的connect测速
+// 这个方法专门测试到代理服务器的连接建立时间
+// timeout: 超时时间（秒）
+// proxyAddr: 代理服务器地址，格式如 "proxy.example.com:1080"
+func MeasureConnectDelay(timeout int, proxyAddr string) (int64, error) {
+	if len(proxyAddr) == 0 {
+		return PingDelayError, fmt.Errorf("proxy address cannot be empty")
+	}
+
+	httpTimeout := time.Second * time.Duration(timeout)
+	dialer := &net.Dialer{
+		Timeout: httpTimeout,
+	}
+
+	start := time.Now()
+	conn, err := dialer.Dial("tcp", proxyAddr)
+	delay := time.Since(start).Milliseconds()
+
+	if conn != nil {
+		conn.Close()
+	}
+
+	if err != nil {
+		precision := delay - int64(timeout)*1000
+		if math.Abs(float64(precision)) < 50 {
+			return PingDelayTimeout, err
+		} else {
+			return PingDelayError, err
+		}
+	}
+
+	return delay, nil
+}
+
 // createProxyDialer 创建支持代理的Dialer
 func createProxyDialer(timeout time.Duration, proxy string) (*net.Dialer, error) {
 	_, err := url.Parse(proxy)
