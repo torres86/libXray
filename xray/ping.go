@@ -1,8 +1,6 @@
 package xray
 
 import (
-	"fmt"
-
 	"github.com/xtls/libxray/nodep"
 )
 
@@ -60,20 +58,28 @@ func PingTCP(datDir string, configPath string, timeout int, host string, port in
 }
 
 // Connect 测试Xray代理的连接延迟，类似Shadowrocket的connect测速
-// 这个方法专门测试到Xray代理服务器的连接建立时间，不涉及数据传输
+// 这个方法通过代理协议测试到目标服务器的连接建立时间，不涉及数据传输
 // datDir means the dir which geosite.dat and geoip.dat are in.
 // configPath means the config.json file path.
 // timeout means how long the connection will be cancelled if no response, in units of seconds.
-// proxyAddr means the proxy server address from config, like "proxy.example.com:1080".
-func Connect(datDir string, configPath string, timeout int, proxyAddr string) (int64, error) {
-	// 对于Connect测速，我们直接测试到代理服务器的连接，无需启动Xray实例
-	// 这样更能反映纯代理连接性能
-
-	if len(proxyAddr) == 0 {
-		return nodep.PingDelayError, fmt.Errorf("proxy address cannot be empty")
+// targetHost means the target host to test proxy connection, like "google.com" or "8.8.8.8".
+// targetPort means the target port to test proxy connection, like 80 or 443.
+// proxy means the local proxy address, like "socks5://127.0.0.1:1080".
+func Connect(datDir string, configPath string, timeout int, targetHost string, targetPort int, proxy string) (int64, error) {
+	// Connect测速需要启动Xray实例来测试真正的代理协议连接
+	InitEnv(datDir)
+	server, err := StartXray(configPath)
+	if err != nil {
+		return nodep.PingDelayError, err
 	}
 
-	delay, err := nodep.MeasureConnectDelay(timeout, proxyAddr)
+	if err := server.Start(); err != nil {
+		return nodep.PingDelayError, err
+	}
+	defer server.Close()
+
+	// 使用代理协议测试连接建立时间（只握手，不传输数据）
+	delay, err := nodep.MeasureProxyConnectDelay(timeout, targetHost, targetPort, proxy)
 	if err != nil {
 		return delay, err
 	}

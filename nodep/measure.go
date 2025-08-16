@@ -1,6 +1,7 @@
 package nodep
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net"
@@ -112,8 +113,9 @@ func MeasureTCPDelay(timeout int, host string, port int, proxy string) (int64, e
 	return delay, nil
 }
 
-// MeasureConnectDelay 测试代理连接延迟，类似Shadowrocket的connect测速
-// 这个方法专门测试到代理服务器的连接建立时间
+// MeasureConnectDelay 测试代理服务器的直接TCP连接延迟（已废弃）
+// 这个方法只是简单的TCP连接测试，不能真正反映代理协议性能
+// 建议使用 MeasureProxyConnectDelay 来测试真正的代理连接
 // timeout: 超时时间（秒）
 // proxyAddr: 代理服务器地址，格式如 "proxy.example.com:1080"
 func MeasureConnectDelay(timeout int, proxyAddr string) (int64, error) {
@@ -132,6 +134,64 @@ func MeasureConnectDelay(timeout int, proxyAddr string) (int64, error) {
 
 	if conn != nil {
 		conn.Close()
+	}
+
+	if err != nil {
+		precision := delay - int64(timeout)*1000
+		if math.Abs(float64(precision)) < 50 {
+			return PingDelayTimeout, err
+		} else {
+			return PingDelayError, err
+		}
+	}
+
+	return delay, nil
+}
+
+// MeasureProxyConnectDelay 测试代理协议连接延迟，类似Shadowrocket的connect测速
+// 这个方法通过代理协议测试到目标服务器的连接建立时间，只测握手不传输数据
+// timeout: 超时时间（秒）
+// targetHost: 目标主机地址
+// targetPort: 目标端口
+// proxy: 本地代理地址，格式如 "socks5://127.0.0.1:1080"
+func MeasureProxyConnectDelay(timeout int, targetHost string, targetPort int, proxy string) (int64, error) {
+	if len(proxy) == 0 {
+		return PingDelayError, fmt.Errorf("proxy address cannot be empty")
+	}
+
+	httpTimeout := time.Second * time.Duration(timeout)
+	target := net.JoinHostPort(targetHost, fmt.Sprintf("%d", targetPort))
+
+	// 创建支持代理的HTTP客户端
+	client, err := CoreHTTPClient(httpTimeout, proxy)
+	if err != nil {
+		return PingDelayError, err
+	}
+
+	// 构造一个简单的连接测试请求（只建立连接，不传输数据）
+	start := time.Now()
+
+	// 使用HTTP CONNECT方法测试代理连接建立
+	// 这比直接TCP连接更能反映真实的代理协议握手时间
+	testURL := fmt.Sprintf("http://%s", target)
+	req, err := http.NewRequest("HEAD", testURL, nil)
+	if err != nil {
+		return PingDelayError, err
+	}
+
+	// 设置连接超时
+	req = req.WithContext(func() context.Context {
+		ctx, cancel := context.WithTimeout(context.Background(), httpTimeout)
+		defer cancel()
+		return ctx
+	}())
+
+	// 执行请求（只测试连接建立，不关心响应内容）
+	resp, err := client.Do(req)
+	delay := time.Since(start).Milliseconds()
+
+	if resp != nil {
+		resp.Body.Close()
 	}
 
 	if err != nil {

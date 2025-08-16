@@ -94,7 +94,9 @@ type connectRequest struct {
 	DatDir     string `json:"datDir,omitempty"`
 	ConfigPath string `json:"configPath,omitempty"`
 	Timeout    int    `json:"timeout,omitempty"`
-	ProxyAddr  string `json:"proxyAddr,omitempty"`
+	TargetHost string `json:"targetHost,omitempty"`
+	TargetPort int    `json:"targetPort,omitempty"`
+	Proxy      string `json:"proxy,omitempty"`
 }
 
 // Ping Xray config and get the delay of its outbound.
@@ -141,7 +143,7 @@ func Connect(base64Text string) string {
 	if err != nil {
 		return response.EncodeToBase64(nodep.PingDelayError, err)
 	}
-	delay, err := xray.Connect(request.DatDir, request.ConfigPath, request.Timeout, request.ProxyAddr)
+	delay, err := xray.Connect(request.DatDir, request.ConfigPath, request.Timeout, request.TargetHost, request.TargetPort, request.Proxy)
 	return response.EncodeToBase64(delay, err)
 }
 
