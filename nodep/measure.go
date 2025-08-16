@@ -160,7 +160,6 @@ func MeasureProxyConnectDelay(timeout int, targetHost string, targetPort int, pr
 	}
 
 	httpTimeout := time.Second * time.Duration(timeout)
-	target := net.JoinHostPort(targetHost, fmt.Sprintf("%d", targetPort))
 
 	// 创建支持代理的HTTP客户端
 	client, err := CoreHTTPClient(httpTimeout, proxy)
@@ -170,21 +169,25 @@ func MeasureProxyConnectDelay(timeout int, targetHost string, targetPort int, pr
 
 	// 构造一个简单的连接测试请求（只建立连接，不传输数据）
 	start := time.Now()
-
-	// 使用HTTP CONNECT方法测试代理连接建立
-	// 这比直接TCP连接更能反映真实的代理协议握手时间
-	testURL := fmt.Sprintf("http://%s", target)
+	
+	// 根据端口选择协议
+	var testURL string
+	if targetPort == 443 {
+		testURL = fmt.Sprintf("https://%s", targetHost)
+	} else {
+		testURL = fmt.Sprintf("http://%s:%d", targetHost, targetPort)
+	}
+	
+	// 使用HEAD请求测试代理连接建立（最小开销）
 	req, err := http.NewRequest("HEAD", testURL, nil)
 	if err != nil {
 		return PingDelayError, err
 	}
 
 	// 设置连接超时
-	req = req.WithContext(func() context.Context {
-		ctx, cancel := context.WithTimeout(context.Background(), httpTimeout)
-		defer cancel()
-		return ctx
-	}())
+	ctx, cancel := context.WithTimeout(context.Background(), httpTimeout)
+	defer cancel()
+	req = req.WithContext(ctx)
 
 	// 执行请求（只测试连接建立，不关心响应内容）
 	resp, err := client.Do(req)
