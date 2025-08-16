@@ -26,7 +26,6 @@ class AndroidBuilder(Builder):
         cgo_ldflags = (
             "-Wl,-z,max-page-size=0x4000 "
             "-Wl,-z,common-page-size=0x4000 "
-            "-Wl,--section-start=.text=0x4000 "
             "-Wl,-z,separate-loadable-segments"
         )
         
@@ -41,7 +40,6 @@ class AndroidBuilder(Builder):
             "-extldflags \""
             "-Wl,-z,max-page-size=0x4000 "
             "-Wl,-z,common-page-size=0x4000 "
-            "-Wl,--section-start=.text=0x4000 "
             "-Wl,-z,separate-loadable-segments"
             "\""
         )
