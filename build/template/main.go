@@ -1,6 +1,10 @@
 package main
 
-import "C"
+import (
+	"C"
+
+	. "github.com/xtls/libxray"
+)
 
 func main() {}
 
@@ -72,6 +76,24 @@ func CGoPingTCP(base64Text *C.char) *C.char {
 func CGoConnect(base64Text *C.char) *C.char {
 	text := C.GoString(base64Text)
 	return C.CString(Connect(text))
+}
+
+//export CGoPingFromJSON
+func CGoPingFromJSON(base64Text *C.char) *C.char {
+	text := C.GoString(base64Text)
+	return C.CString(PingFromJSON(text))
+}
+
+//export CGoPingTCPFromJSON
+func CGoPingTCPFromJSON(base64Text *C.char) *C.char {
+	text := C.GoString(base64Text)
+	return C.CString(PingTCPFromJSON(text))
+}
+
+//export CGoConnectFromJSON
+func CGoConnectFromJSON(base64Text *C.char) *C.char {
+	text := C.GoString(base64Text)
+	return C.CString(ConnectFromJSON(text))
 }
 
 //export CGoQueryStats

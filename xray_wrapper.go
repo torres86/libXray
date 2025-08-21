@@ -99,6 +99,32 @@ type connectRequest struct {
 	Proxy      string `json:"proxy,omitempty"`
 }
 
+type pingJSONRequest struct {
+	DatDir     string `json:"datDir,omitempty"`
+	ConfigJSON string `json:"configJSON,omitempty"`
+	Timeout    int    `json:"timeout,omitempty"`
+	Url        string `json:"url,omitempty"`
+	Proxy      string `json:"proxy,omitempty"`
+}
+
+type pingTCPJSONRequest struct {
+	DatDir     string `json:"datDir,omitempty"`
+	ConfigJSON string `json:"configJSON,omitempty"`
+	Timeout    int    `json:"timeout,omitempty"`
+	Host       string `json:"host,omitempty"`
+	Port       int    `json:"port,omitempty"`
+	Proxy      string `json:"proxy,omitempty"`
+}
+
+type connectJSONRequest struct {
+	DatDir     string `json:"datDir,omitempty"`
+	ConfigJSON string `json:"configJSON,omitempty"`
+	Timeout    int    `json:"timeout,omitempty"`
+	TargetHost string `json:"targetHost,omitempty"`
+	TargetPort int    `json:"targetPort,omitempty"`
+	Proxy      string `json:"proxy,omitempty"`
+}
+
 // Ping Xray config and get the delay of its outbound.
 func Ping(base64Text string) string {
 	var response nodep.CallResponse[int64]
@@ -144,6 +170,51 @@ func Connect(base64Text string) string {
 		return response.EncodeToBase64(nodep.PingDelayError, err)
 	}
 	delay, err := xray.Connect(request.DatDir, request.ConfigPath, request.Timeout, request.TargetHost, request.TargetPort, request.Proxy)
+	return response.EncodeToBase64(delay, err)
+}
+
+func PingFromJSON(base64Text string) string {
+	var response nodep.CallResponse[int64]
+	req, err := base64.StdEncoding.DecodeString(base64Text)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	var request pingJSONRequest
+	err = json.Unmarshal(req, &request)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	delay, err := xray.PingFromJSON(request.DatDir, request.ConfigJSON, request.Timeout, request.Url, request.Proxy)
+	return response.EncodeToBase64(delay, err)
+}
+
+func PingTCPFromJSON(base64Text string) string {
+	var response nodep.CallResponse[int64]
+	req, err := base64.StdEncoding.DecodeString(base64Text)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	var request pingTCPJSONRequest
+	err = json.Unmarshal(req, &request)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	delay, err := xray.PingTCPFromJSON(request.DatDir, request.ConfigJSON, request.Timeout, request.Host, request.Port, request.Proxy)
+	return response.EncodeToBase64(delay, err)
+}
+
+func ConnectFromJSON(base64Text string) string {
+	var response nodep.CallResponse[int64]
+	req, err := base64.StdEncoding.DecodeString(base64Text)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	var request connectJSONRequest
+	err = json.Unmarshal(req, &request)
+	if err != nil {
+		return response.EncodeToBase64(nodep.PingDelayError, err)
+	}
+	delay, err := xray.ConnectFromJSON(request.DatDir, request.ConfigJSON, request.Timeout, request.TargetHost, request.TargetPort, request.Proxy)
 	return response.EncodeToBase64(delay, err)
 }
 
