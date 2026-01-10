@@ -38,7 +38,7 @@ func StartXray(configPath string) (*core.Instance, error) {
 func StartXrayFromJSON(configJSON string) (*core.Instance, error) {
 	// Convert JSON string to bytes
 	configBytes := []byte(configJSON)
-	
+
 	// Use core.StartInstance which can load configuration directly from bytes
 	server, err := core.StartInstance("json", configBytes)
 	if err != nil {
