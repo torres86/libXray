@@ -7,6 +7,7 @@ on:
       - '**.md'
       - '.github/**'
       - 'docs/**'
+  workflow_dispatch:  # 支持手动触发
 
 env:
   ANDROID_NDK_VERSION: r26d  # Updated to support 16KB page alignment
