@@ -62,6 +62,13 @@ jobs:
         echo "Building AAR with 16KB page alignment and size optimization..."
         echo "Skipping geo files download (provided by App at runtime)"
         
+        # 下载项目依赖
+        go mod download
+        
+        # 确保 gomobile 依赖正确安装
+        go get -d golang.org/x/mobile/cmd/gomobile
+        go get -d google.golang.org/genproto
+        
         # 清理旧文件
         rm -f libXray.aar libXray-sources.jar
         
