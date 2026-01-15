@@ -13,6 +13,7 @@ class WindowsBuilder(Builder):
         create_dir_if_not_exists(self.framework_dir)
         self.lib_file = "libXray.dll"
         self.lib_header_file = "libXray.h"
+        self.bin_file = "xray.exe"
 
     def before_build(self):
         super().before_build()
@@ -23,13 +24,15 @@ class WindowsBuilder(Builder):
         self.build_windows()
         self.after_build()
 
+        self.build_desktop_bin()
+
     def build_windows(self):
         output_dir = self.framework_dir
         create_dir_if_not_exists(output_dir)
         output_file = os.path.join(output_dir, self.lib_file)
         run_env = os.environ.copy()
-        run_env["CC"] = "clang.exe"
-        run_env["CXX"] = "clang++.exe"
+        run_env["CC"] = "gcc.exe"
+        run_env["CXX"] = "g++.exe"
         run_env["CGO_ENABLED"] = "1"
 
         cmd = [

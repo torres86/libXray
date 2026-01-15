@@ -3,13 +3,18 @@ import re
 import shutil
 import subprocess
 
-from app.cmd import delete_file_if_exists, delete_dir_if_exists
+from app.cmd import (
+    create_dir_if_not_exists,
+    delete_file_if_exists,
+    delete_dir_if_exists,
+)
 
 
 class Builder(object):
     def __init__(self, build_dir: str):
         self.build_dir = build_dir
         self.lib_dir = os.path.join(self.build_dir, "..")
+        self.bin_file = "xray"
 
     def clean_lib_files(self, files: list[str]):
         for file in files:
@@ -23,7 +28,8 @@ class Builder(object):
 
     def download_geo(self):
         os.chdir(self.lib_dir)
-        main_path = os.path.join("main", "main.go")
+        # 使用上游的新路径 download_geo，保留我们的重试逻辑
+        main_path = os.path.join("download_geo", "main.go")
         
         # Try up to 3 times with increasing timeout
         for attempt in range(3):
@@ -123,3 +129,25 @@ class Builder(object):
                 new_lines.append(new_line)
         with open(file_path, "w") as f:
             f.writelines(new_lines)
+
+    def build_desktop_bin(self):
+        bin_dir = os.path.join(self.lib_dir, "bin")
+        create_dir_if_not_exists(bin_dir)
+        output_file = os.path.join(bin_dir, self.bin_file)
+        run_env = os.environ.copy()
+        run_env["CGO_ENABLED"] = "0"
+
+        cmd = [
+            "go",
+            "build",
+            "-trimpath",
+            "-ldflags",
+            "-s -w",
+            f"-o={output_file}",
+            "./desktop_bin",
+        ]
+        os.chdir(self.lib_dir)
+        print(cmd)
+        ret = subprocess.run(cmd, env=run_env)
+        if ret.returncode != 0:
+            raise Exception(f"build_desktop_bin failed")
