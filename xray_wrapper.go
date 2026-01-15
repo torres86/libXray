@@ -321,3 +321,4 @@ func XrayVersion() string {
 	var response nodep.CallResponse[string]
 	return response.EncodeToBase64(xray.XrayVersion(), nil)
 }
+
