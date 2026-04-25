@@ -195,7 +195,7 @@ func (proxy ClashProxy) shadowsocksOutbound() (*conf.OutboundDetourConfig, error
 		if proxy.PluginOpts.Tls {
 			tlsSettings := &conf.TLSConfig{}
 			tlsSettings.Fingerprint = proxy.PluginOpts.Fingerprint
-			tlsSettings.Insecure = proxy.PluginOpts.SkipCertVerify
+			tlsSettings.AllowInsecure = proxy.PluginOpts.SkipCertVerify
 
 			if proxy.PluginOpts.EchOpts != nil {
 				if proxy.PluginOpts.EchOpts.Enable {
@@ -363,7 +363,7 @@ func (proxy ClashProxy) parseSecurity(streamSettings *conf.StreamConfig, outboun
 		streamSettings.Security = "tls"
 	}
 	if proxy.SkipCertVerify {
-		tlsSettings.Insecure = true
+		tlsSettings.AllowInsecure = true
 	}
 
 	if proxy.EchOpts != nil {

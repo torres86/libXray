@@ -11,12 +11,13 @@ on:
 
 env:
   ANDROID_NDK_VERSION: r26d  # Updated to support 16KB page alignment
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.26.0'
+  GOMOBILE_VERSION: 'v0.0.0-20260410095206-2cfb76559b7b'
 
 jobs:
   release-android:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     
     steps:
     - name: Checkout repository
@@ -40,43 +41,25 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         # 不需要安装额外的Python依赖，构建脚本是自包含的
+
+    - name: Run unit tests
+      run: go test ./...
         
     - name: Set up Android NDK
       uses: nttld/setup-ndk@v1
       with:
         ndk-version: ${{ env.ANDROID_NDK_VERSION }}
         
-    - name: Set up Go mobile
-      run: |
-        go install golang.org/x/mobile/cmd/gomobile@latest
-        gomobile init
-        
     - name: Build Android AAR
       run: |
         export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
-        # Set environment variables for Android 15+ 16KB page alignment compatibility
-        export CGO_CFLAGS="-O2 -g"
-        export CGO_CXXFLAGS="-O2 -g"  
-        export CGO_LDFLAGS="-Wl,-z,max-page-size=0x4000 -Wl,-z,common-page-size=0x4000"
-        
-        echo "Building AAR with 16KB page alignment and size optimization..."
-        echo "Skipping geo files download (provided by App at runtime)"
-        
+        echo "Building AAR with the repository Android build script..."
+        echo "Build script installs pinned gomobile and refreshes geo data."
+
         # 下载项目依赖
         go mod download
-        
-        # 确保 gomobile 依赖正确安装
-        go get -d golang.org/x/mobile/cmd/gomobile
-        go get -d google.golang.org/genproto
-        
-        # 清理旧文件
-        rm -f libXray.aar libXray-sources.jar
-        
-        # 直接编译（跳过 geo 下载，添加压缩参数 -ldflags="-s -w"）
-        gomobile bind \
-          -target android \
-          -androidapi 21 \
-          -ldflags="-s -w"
+
+        python3 build/main.py android
         
     - name: Verify build output
       run: |
@@ -137,6 +120,9 @@ jobs:
           - **短SHA**: `${{ steps.build_info.outputs.SHORT_SHA }}`
           - **构建时间**: ${{ steps.build_info.outputs.BUILD_TIME }}
           - **触发分支**: `${{ github.ref_name }}`
+          - **Xray-core**: `v1.260327.0`
+          - **Go**: `${{ env.GO_VERSION }}`
+          - **gomobile**: `${{ env.GOMOBILE_VERSION }}`
           
           📦 **包含文件**
           - `libXray.aar` - Android AAR库文件 (包含所有架构)

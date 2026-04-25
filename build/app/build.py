@@ -15,6 +15,11 @@ class Builder(object):
         self.build_dir = build_dir
         self.lib_dir = os.path.join(self.build_dir, "..")
         self.bin_file = "xray"
+        self.gomobile_path = self.go_bin_path("gomobile")
+
+    def go_bin_path(self, binary: str):
+        gopath = subprocess.check_output(["go", "env", "GOPATH"], text=True).strip()
+        return os.path.join(gopath, "bin", binary)
 
     def clean_lib_files(self, files: list[str]):
         for file in files:
@@ -57,20 +62,15 @@ class Builder(object):
         raise Exception("download_geo failed after 3 attempts")
 
     def prepare_gomobile(self):
+        gomobile_version = os.environ.get("GOMOBILE_VERSION", "latest")
         ret = subprocess.run(
-            ["go", "install", "golang.org/x/mobile/cmd/gomobile@latest"]
+            ["go", "install", f"golang.org/x/mobile/cmd/gomobile@{gomobile_version}"]
         )
         if ret.returncode != 0:
             raise Exception("go install gomobile failed")
-        ret = subprocess.run(["gomobile", "init"])
+        ret = subprocess.run([self.gomobile_path, "init"])
         if ret.returncode != 0:
             raise Exception("gomobile init failed")
-        ret = subprocess.run(["go", "get", "golang.org/x/mobile/cmd/gomobile"])
-        if ret.returncode != 0:
-            raise Exception("gomobile update failed")
-        ret = subprocess.run(["go", "get", "google.golang.org/genproto"])
-        if ret.returncode != 0:
-            raise Exception("gomobile install genproto failed")
 
     def prepare_static_lib(self):
         self.copy_template_file()

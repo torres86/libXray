@@ -123,10 +123,19 @@ func handleTestResponse(response string, t *testing.T) {
 	t.Log("TestXray passed successfully", string(decoded))
 }
 
+func requireIntegrationVMess(t *testing.T) string {
+	t.Helper()
+
+	vmess := os.Getenv("LIBXRAY_TEST_VMESS")
+	if vmess == "" {
+		t.Skip("set LIBXRAY_TEST_VMESS to run VMess integration test")
+	}
+	return vmess
+}
+
 // TestRunXrayWithVmess tests running Xray with VMess configuration
 func TestRunXrayWithVmess(t *testing.T) {
-	// Example VMess configuration (base64 encoded)
-	vmess := `xxx`
+	vmess := requireIntegrationVMess(t)
 
 	// Decode and parse the VMess configuration
 	vmessConfig, err := decodeVmessConfig(vmess)
@@ -169,8 +178,7 @@ func TestRunXrayWithVmess(t *testing.T) {
 
 // TestRunXray tests running Xray with a VMess configuration for real-world usage
 func TestRunXray(t *testing.T) {
-	// Example VMess configuration (same as in the previous test)
-	vmess := `xxx`
+	vmess := requireIntegrationVMess(t)
 
 	// Decode and parse the VMess configuration
 	vmessConfig, err := decodeVmessConfig(vmess)

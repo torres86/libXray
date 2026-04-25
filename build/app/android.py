@@ -34,7 +34,7 @@ class AndroidBuilder(Builder):
         print("Building with minimal 16KB page alignment for Android 15+ compatibility...")
         ret = subprocess.run(
             [
-                "gomobile", "bind", 
+                self.gomobile_path, "bind",
                 "-target", "android", 
                 "-androidapi", "21"
             ],

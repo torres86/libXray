@@ -506,7 +506,7 @@ func (proxy xrayShareLink) parseSecurity(link *url.URL, streamSettings *conf.Str
 	allowInsecure := query.Get("allowInsecure")
 	if len(allowInsecure) > 0 {
 		if allowInsecure == "true" || allowInsecure == "1" {
-			tlsSettings.Insecure = true
+			tlsSettings.AllowInsecure = true
 		}
 	}
 

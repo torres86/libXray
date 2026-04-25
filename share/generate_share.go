@@ -334,7 +334,7 @@ func streamSettingsQuery(proxy conf.OutboundDetourConfig, link *url.URL) {
 		// 4.4.3 allowInsecure
 		// 没有这个字段。不安全的节点，不适合分享。
 		// I don't like this field, but too many people ask for it.
-		allowInsecure := streamSettings.TLSSettings.Insecure
+		allowInsecure := streamSettings.TLSSettings.AllowInsecure
 		if allowInsecure {
 			query = addQuery(query, "allowInsecure", "1")
 		}
