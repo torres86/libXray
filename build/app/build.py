@@ -63,11 +63,12 @@ class Builder(object):
 
     def prepare_gomobile(self):
         gomobile_version = os.environ.get("GOMOBILE_VERSION", "latest")
-        ret = subprocess.run(
-            ["go", "install", f"golang.org/x/mobile/cmd/gomobile@{gomobile_version}"]
-        )
-        if ret.returncode != 0:
-            raise Exception("go install gomobile failed")
+        for tool in ("gomobile", "gobind"):
+            ret = subprocess.run(
+                ["go", "install", f"golang.org/x/mobile/cmd/{tool}@{gomobile_version}"]
+            )
+            if ret.returncode != 0:
+                raise Exception(f"go install {tool} failed")
         ret = subprocess.run([self.gomobile_path, "init"])
         if ret.returncode != 0:
             raise Exception("gomobile init failed")

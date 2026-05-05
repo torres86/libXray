@@ -28,7 +28,7 @@ type vmessQrCode struct {
 
 func parseVMessQrCode(text string) (*conf.OutboundDetourConfig, error) {
 	qrcodeBytes := []byte(text)
-	var qrcode *vmessQrCode
+	qrcode := vmessQrCode{}
 
 	err := json.Unmarshal(qrcodeBytes, &qrcode)
 	if err != nil {
@@ -43,18 +43,28 @@ func (proxy vmessQrCode) outbound() (*conf.OutboundDetourConfig, error) {
 	outbound.Protocol = "vmess"
 	setOutboundName(outbound, proxy.Ps)
 
-	settings := conf.VMessOutboundConfig{}
+	user := &conf.VMessAccount{}
+	user.ID = proxy.Id
+	user.Security = proxy.Scy
 
-	settings.Address = parseAddress(proxy.Add)
+	vnext := &conf.VMessOutboundTarget{}
+	vnext.Address = parseAddress(proxy.Add)
+
 	portStr := fmt.Sprintf("%v", proxy.Port)
 	port, err := strconv.Atoi(portStr)
 	if err != nil {
 		return nil, err
 	}
-	settings.Port = uint16(port)
+	vnext.Port = uint16(port)
 
-	settings.ID = proxy.Id
-	settings.Security = proxy.Scy
+	userRawMessage, err := convertJsonToRawMessage(user)
+	if err != nil {
+		return nil, err
+	}
+	vnext.Users = []json.RawMessage{userRawMessage}
+
+	settings := conf.VMessOutboundConfig{}
+	settings.Receivers = []*conf.VMessOutboundTarget{vnext}
 
 	settingsRawMessage, err := convertJsonToRawMessage(settings)
 	if err != nil {

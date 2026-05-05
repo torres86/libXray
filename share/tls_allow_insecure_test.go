@@ -1,9 +1,11 @@
 package share
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/xtls/xray-core/infra/conf"
+	"github.com/xtls/xray-core/proxy/vless"
 )
 
 func TestConvertShareLinksToXrayJsonPreservesTLSAllowInsecure(t *testing.T) {
@@ -21,17 +23,28 @@ func TestConvertShareLinksToXrayJsonPreservesTLSAllowInsecure(t *testing.T) {
 	if streamSettings == nil || streamSettings.TLSSettings == nil {
 		t.Fatalf("expected TLS stream settings, got %#v", streamSettings)
 	}
-	if !streamSettings.TLSSettings.AllowInsecure {
-		t.Fatal("expected TLS AllowInsecure to be true")
+	if !streamSettings.TLSSettings.Insecure {
+		t.Fatal("expected TLS Insecure to be true")
 	}
 }
 
 func TestShareLinkIncludesTLSAllowInsecure(t *testing.T) {
-	settingsRawMessage, err := convertJsonToRawMessage(conf.VLessOutboundConfig{
-		Address:    parseAddress("example.com"),
-		Port:       443,
+	accountRawMessage, err := convertJsonToRawMessage(vless.Account{
 		Id:         "11111111-1111-1111-1111-111111111111",
 		Encryption: "none",
+	})
+	if err != nil {
+		t.Fatalf("convertJsonToRawMessage() account error = %v", err)
+	}
+
+	settingsRawMessage, err := convertJsonToRawMessage(conf.VLessOutboundConfig{
+		Vnext: []*conf.VLessOutboundVnext{
+			{
+				Address: parseAddress("example.com"),
+				Port:    443,
+				Users:   []json.RawMessage{accountRawMessage},
+			},
+		},
 	})
 	if err != nil {
 		t.Fatalf("convertJsonToRawMessage() error = %v", err)
@@ -45,7 +58,7 @@ func TestShareLinkIncludesTLSAllowInsecure(t *testing.T) {
 			Network:  &network,
 			Security: "tls",
 			TLSSettings: &conf.TLSConfig{
-				AllowInsecure: true,
+				Insecure: true,
 			},
 		},
 	})
