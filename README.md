@@ -19,8 +19,8 @@ Compile script. It is recommended to always use this script to compile libXray. 
 ### Usage
 
 ```shell
-# Android (optional: specify Android API level, default is 21)
-python3 build/main.py android [api-level]
+# Android (min Android API level is 21)
+python3 build/main.py android
 
 # Apple (gomobile or go)
 python3 build/main.py apple gomobile
@@ -64,14 +64,17 @@ Note: The product `LibXray.xcframework` does not contain **module.modulemap**. W
 
 ### Linux
 
-depend on clang and clang++.
+depend on gcc and g++.
 
 ### Windows
 
-depend on [LLVM MinGW](https://github.com/mstorsjo/llvm-mingw), you can install it using winget.
+depend on MinGW.
+
+you can use winget to install [LLVM MinGW](https://github.com/mstorsjo/llvm-mingw) or [WinLibs](https://github.com/brechtsanders/winlibs_mingw) .
 
 ```shell
 winget install MartinStorsjo.LLVM-MinGW.UCRT
+winget install BrechtSanders.WinLibs.POSIX.UCRT
 ```
 
 ## controller
@@ -91,10 +94,6 @@ Read geo files and count the categories and rules.
 ### read
 
 Read the Xray Json configuration and extract the geo file name used.
-
-### thin
-
-Read the Xray Json configuration and cut the geo file used.
 
 ## main
 

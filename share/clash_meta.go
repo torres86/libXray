@@ -17,14 +17,15 @@ type ClashYaml struct {
 }
 
 type ClashProxy struct {
-	Name     string `yaml:"name,omitempty"`
-	Type     string `yaml:"type,omitempty"`
-	Server   string `yaml:"server,omitempty"`
-	Port     uint16 `yaml:"port,omitempty"`
-	Uuid     string `yaml:"uuid,omitempty"`
-	Cipher   string `yaml:"cipher,omitempty"`
-	Username string `yaml:"username,omitempty"`
-	Password string `yaml:"password,omitempty"`
+	Name       string `yaml:"name,omitempty"`
+	Type       string `yaml:"type,omitempty"`
+	Server     string `yaml:"server,omitempty"`
+	Port       uint16 `yaml:"port,omitempty"`
+	Uuid       string `yaml:"uuid,omitempty"`
+	Cipher     string `yaml:"cipher,omitempty"`
+	Username   string `yaml:"username,omitempty"`
+	Password   string `yaml:"password,omitempty"`
+	Encryption string `yaml:"encryption,omitempty"`
 
 	Udp        bool `yaml:"udp,omitempty"`
 	UdpOverTcp bool `yaml:"udp-over-tcp,omitempty"`
